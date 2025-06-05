@@ -1,7 +1,11 @@
-import Heart from "@/assets/svgs/entry.svg";
 import CustomButton from "@/components/CustomButton";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
+import { hp, Size, wp } from "@/constants/Dimensions";
+import { font } from "@/constants/Fonts";
+import { image } from "@/constants/Images";
+import { svgIcon } from "@/constants/SvgIcons";
+import { useTheme } from "@/constants/Theme";
 import { useToast } from "@/constants/ToastProvider";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
@@ -10,6 +14,8 @@ import {
   Animated,
   Dimensions,
   ImageBackground,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
   ScrollView,
   StatusBar,
   StyleSheet,
@@ -41,13 +47,14 @@ const textData = [
 export default function Entry() {
   const { showToast } = useToast();
   const [currentIndex, setCurrentIndex] = useState(0);
+  const authenticated = true;
   const scrollViewRef = useRef(null);
   const scrollX = useRef(new Animated.Value(0)).current;
-
+  const { gradients } = useTheme();
   // Create animated values for each indicator
   const indicatorAnimations = useRef(
     textData.map((_, index) => ({
-      width: new Animated.Value(index === 0 ? 54 : 26),
+      width: new Animated.Value(index === 0 ? wp(14) : wp(7)),
       opacity: new Animated.Value(index === 0 ? 1 : 0.5),
       scale: new Animated.Value(index === 0 ? 1 : 0.8),
     }))
@@ -60,7 +67,7 @@ export default function Entry() {
 
       Animated.parallel([
         Animated.timing(animation.width, {
-          toValue: isActive ? 54 : 26,
+          toValue: isActive ? wp(14) : wp(7),
           duration: 200,
           useNativeDriver: false,
         }),
@@ -80,28 +87,20 @@ export default function Entry() {
 
   const handleSignin = () => {
     router.push("/auth/signin");
-    showToast({
-      type: "warning",
-      text1: "Sign in successful",
-      text2: "Welcome back!",
-    });
   };
 
   const handleSignup = () => {
     router.push("/auth/signup");
   };
 
-  const handleScroll = (event) => {
+  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const contentOffset = event.nativeEvent.contentOffset;
     const viewSize = event.nativeEvent.layoutMeasurement;
 
-    // Update the animated value for real-time tracking
     scrollX.setValue(contentOffset.x);
 
-    // Calculate current page for immediate indicator update
     const pageNum = Math.round(contentOffset.x / viewSize.width);
 
-    // Only update state if page actually changed to avoid unnecessary re-renders
     if (pageNum !== currentIndex && pageNum >= 0 && pageNum < textData.length) {
       setCurrentIndex(pageNum);
     }
@@ -129,24 +128,19 @@ export default function Entry() {
 
       {/* Background Images */}
       <ImageBackground
-        source={require("@/assets/images/entrybg.png")}
+        source={image.background}
         style={styles.backgroundImage}
         resizeMode="cover"
       >
         {/* Gradient Overlay */}
         <LinearGradient
-          colors={["rgba(0,0,0,0.2)", "rgba(0,0,0,0.4)", "rgba(0,0,0,0.9)"]}
+          colors={gradients.overlay}
           style={styles.gradientOverlay}
         />
       </ImageBackground>
 
       <LinearGradient
-        colors={[
-          "transparent",
-          "rgba(121, 142, 255, 0.19)",
-          "rgba(179, 144, 255, 0.4)",
-          "rgba(179, 144, 255, 0.5)",
-        ]}
+        colors={gradients.bottom}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         locations={[0, 0.7, 0.9, 1]}
@@ -156,9 +150,7 @@ export default function Entry() {
       {/* Content Container */}
       <View style={styles.contentContainer}>
         {/* Heart Icon */}
-        <View style={styles.iconContainer}>
-          <Heart />
-        </View>
+        <View style={styles.iconContainer}>{svgIcon.heart}</View>
 
         {/* Screen Indicators */}
         <View style={styles.indicatorsContainer}>{renderIndicators()}</View>
@@ -208,15 +200,15 @@ export default function Entry() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#000",
+    // backgroundColor: "#000",
   },
   backgroundImage: {
     position: "absolute",
     top: 0,
     left: 0,
     right: 0,
-    height: height * 0.6,
-    width: width,
+    height: hp(60),
+    width: wp(100),
   },
   gradientOverlay: {
     flex: 1,
@@ -227,35 +219,35 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: 0,
     right: 0,
-    height: height * 0.7,
-    width: width,
+    height: hp(70),
+    width: wp(100),
   },
   contentContainer: {
     flex: 1,
-    paddingHorizontal: 24,
-    paddingTop: 80,
-    paddingBottom: 50,
+    paddingHorizontal: wp(6),
+    paddingTop: hp(10),
+    paddingBottom: hp(6),
     justifyContent: "space-between",
   },
   iconContainer: {
     alignItems: "center",
-    marginTop: 60,
+    marginTop: hp(7.5),
   },
   indicatorsContainer: {
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    marginTop: 80,
-    gap: 8,
+    marginTop: hp(10),
+    gap: wp(2),
   },
   indicator: {
-    height: 6,
-    borderRadius: 4,
+    height: hp(0.75),
+    borderRadius: wp(1),
     backgroundColor: "#fff",
   },
   textContainer: {
     alignItems: "center",
-    height: 260,
+    height: hp(32.5),
   },
   textScrollView: {
     flex: 1,
@@ -264,23 +256,23 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   textSlide: {
-    width: width - 48,
+    width: wp(88),
     alignItems: "center",
     justifyContent: "center",
   },
   mainHeading: {
-    fontSize: 48,
-    fontFamily: "HelveticaNow",
+    fontSize: Size(12),
+    fontFamily: font.heading,
     textAlign: "center",
-    lineHeight: 56,
-    marginBottom: 24,
+    lineHeight: Size(14),
+    marginBottom: hp(3),
     letterSpacing: -1,
   },
   description: {
-    fontSize: 16,
-    fontFamily: "SFProRegular",
+    fontSize: Size(4),
+    fontFamily: font.regular,
     textAlign: "center",
-    paddingHorizontal: 12,
+    paddingHorizontal: wp(3),
   },
   signUpContainer: {
     flexDirection: "row",
@@ -288,11 +280,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   signUpText: {
-    fontSize: 16,
-    fontFamily: "SFProRegular",
+    fontSize: Size(4),
+    fontFamily: font.regular,
   },
   signUpLink: {
-    fontSize: 16,
-    fontFamily: "SFProMedium",
+    fontSize: Size(4),
+    fontFamily: font.medium,
   },
 });

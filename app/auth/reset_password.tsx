@@ -1,121 +1,151 @@
+import CustomButton from "@/components/CustomButton";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
-import { Colors } from "@/constants/Colors";
+import { hp, Size, wp } from "@/constants/Dimensions";
+import { font } from "@/constants/Fonts";
+import { image } from "@/constants/Images";
 import { EmailIcon } from "@/constants/SvgIcons";
+import { useTheme } from "@/constants/Theme";
+import { useToast } from "@/constants/ToastProvider";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
-  Dimensions,
   ImageBackground,
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
   StatusBar,
   StyleSheet,
   TextInput,
   TouchableOpacity,
+  TouchableWithoutFeedback,
   View,
 } from "react-native";
 
-const { width, height } = Dimensions.get("window");
-
 export default function ResetPasswordScreen() {
+  const { showToast } = useToast();
   const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+  const { gradients } = useTheme();
+  const isButtonDisabled = useMemo(() => {
+    return !email.trim();
+  }, [email]);
+
+  const handleResetPassword = async () => {
+    if (isButtonDisabled) return;
+
+    setLoading(true);
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
+      showToast({
+        type: "success",
+        text1: "Reset link sent",
+        text2: "Check your email for reset instructions",
+      });
+
+      router.push("/auth/new_password");
+    } catch (error) {
+      console.error("Reset password failed:", error);
+      showToast({
+        type: "error",
+        text1: "Reset failed",
+        text2: "Please try again later",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <ThemedView style={styles.container}>
       <StatusBar barStyle="light-content" />
 
-      {/* Background Images */}
       <ImageBackground
-        source={require("@/assets/images/entrybg.png")}
+        source={image.background}
         style={styles.backgroundImage}
         resizeMode="cover"
       >
-        {/* Gradient Overlay */}
         <LinearGradient
-          colors={["rgba(0,0,0,0.4)", "rgba(0,0,0,0.6)", "rgba(0,0,0,0.9)"]}
+          colors={gradients.overlay}
           style={styles.gradientOverlay}
         />
       </ImageBackground>
 
-      {/* Purple Gradient at Bottom Right Corner */}
       <LinearGradient
-        colors={[
-          "transparent",
-          "rgba(121, 142, 255, 0.19)",
-          "rgba(179, 144, 255, 0.4)",
-          "rgba(179, 144, 255, 0.5)",
-        ]}
+        colors={gradients.bottom}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         locations={[0, 0.7, 0.9, 1]}
         style={styles.bottomGradient}
       />
 
-      {/* Content Container */}
-      <View style={styles.contentContainer}>
-        {/* Main Content */}
-        <View style={styles.formContainer}>
-          <ThemedText style={styles.title}>Forgot your password?</ThemedText>
+      <KeyboardAvoidingView
+        style={styles.keyboardContainer}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
+      >
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <ScrollView
+            contentContainerStyle={styles.scrollContainer}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
+            <View style={styles.contentContainer}>
+              <View style={styles.formContainer}>
+                <ThemedText style={styles.title}>
+                  Forgot your password?
+                </ThemedText>
 
-          <ThemedText style={styles.subtitle}>
-            Reset link is on the way.
-          </ThemedText>
+                <ThemedText style={styles.subtitle}>
+                  Reset link is on the way.
+                </ThemedText>
 
-          {/* Email Form */}
-          <View style={styles.formFields}>
-            <View style={styles.inputContainer}>
-              {/* Email Input */}
-              <View style={styles.emailInput}>
-                <EmailIcon />
-                <TextInput
-                  style={styles.textInput}
-                  placeholder="Your email"
-                  placeholderTextColor="#999"
-                  value={email}
-                  onChangeText={setEmail}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
+                <View>
+                  <View style={styles.inputContainer}>
+                    <View style={styles.emailInput}>
+                      <EmailIcon />
+                      <TextInput
+                        style={styles.textInput}
+                        placeholder="Your email"
+                        placeholderTextColor="#999"
+                        value={email}
+                        onChangeText={setEmail}
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                        editable={!loading}
+                      />
+                    </View>
+                  </View>
+                </View>
+              </View>
+
+              <View style={styles.bottomActions}>
+                <CustomButton
+                  title="Reset Password"
+                  onpress={handleResetPassword}
+                  loading={loading}
+                  disabled={isButtonDisabled}
                 />
+
+                <TouchableOpacity
+                  style={styles.backToLoginContainer}
+                  activeOpacity={0.7}
+                  onPress={() => {
+                    router.push("/auth/signin");
+                  }}
+                >
+                  <ThemedText style={styles.backToLoginText}>
+                    Back to login
+                  </ThemedText>
+                </TouchableOpacity>
               </View>
             </View>
-          </View>
-        </View>
-
-        {/* Bottom Actions */}
-        <View style={styles.bottomActions}>
-          <TouchableOpacity
-            style={styles.resetButton}
-            activeOpacity={0.8}
-            onPress={() => {
-              router.push("/auth/new_password");
-            }}
-          >
-            <ThemedText
-              style={styles.resetButtonText}
-              lightColor="#fff"
-              darkColor="#fff"
-            >
-              Reset Password
-            </ThemedText>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.backToLoginContainer}
-            activeOpacity={0.7}
-            onPress={() => {
-              router.push("/auth/signin");
-            }}
-          >
-            <ThemedText
-              style={styles.backToLoginText}
-              lightColor="rgba(255,255,255,0.8)"
-              darkColor="rgba(255,255,255,0.8)"
-            >
-              Back to login
-            </ThemedText>
-          </TouchableOpacity>
-        </View>
-      </View>
+          </ScrollView>
+        </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
     </ThemedView>
   );
 }
@@ -123,15 +153,15 @@ export default function ResetPasswordScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.black,
+    // backgroundColor: Colors.black,
   },
   backgroundImage: {
     position: "absolute",
     top: 0,
     left: 0,
     right: 0,
-    height: height * 0.6,
-    width: width,
+    height: hp(60),
+    width: wp(100),
   },
   gradientOverlay: {
     flex: 1,
@@ -142,88 +172,69 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: 0,
     right: 0,
-    height: height * 0.7,
-    width: width,
+    height: hp(70),
+    width: wp(100),
+  },
+  keyboardContainer: {
+    flex: 1,
+  },
+  scrollContainer: {
+    flexGrow: 1,
   },
   contentContainer: {
     flex: 1,
-    paddingHorizontal: 24,
-    paddingTop: 100,
-    paddingBottom: 50,
+    paddingHorizontal: wp(6),
+    paddingTop: hp(12.5),
+    paddingBottom: hp(6),
     justifyContent: "space-between",
+    minHeight: hp(88),
   },
   formContainer: {
     flex: 1,
   },
   title: {
-    fontSize: 30,
+    fontSize: Size(7.5),
     textAlign: "center",
-    marginBottom: 16,
-    fontFamily: "HelveticaNow",
-    lineHeight: 38,
-    color: Colors.white,
+    marginBottom: hp(2),
+    fontFamily: font.heading,
+    lineHeight: Size(9.5),
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: Size(4),
     textAlign: "center",
-    marginBottom: 40,
-    fontFamily: "SFProRegular",
-    color: "rgba(255,255,255,0.7)",
-    lineHeight: 22,
-  },
-  formFields: {
-    width: "100%",
+    marginBottom: hp(5),
+    fontFamily: font.regular,
+    lineHeight: Size(5.5),
   },
   inputContainer: {
     borderWidth: 1,
-    borderRadius: 22,
+    borderRadius: wp(5.5),
     backgroundColor: "rgba(0, 0, 0, 0.47)",
     borderColor: "rgba(255, 255, 255, 0.18)",
   },
   emailInput: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    gap: 12,
+    paddingHorizontal: wp(4),
+    paddingVertical: hp(2),
+    gap: wp(3),
   },
   textInput: {
     flex: 1,
-    fontSize: 16,
+    fontSize: Size(4),
     color: "#fff",
-    fontFamily: "SFProRegular",
+    fontFamily: font.regular,
   },
   bottomActions: {
     width: "100%",
-    alignItems: "center",
-  },
-  resetButton: {
-    backgroundColor: "#6366f1",
-    paddingVertical: 16,
-    paddingHorizontal: 32,
-    borderRadius: 12,
-    alignItems: "center",
-    marginBottom: 24,
-    width: "100%",
-    shadowColor: "#6366f1",
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  resetButtonText: {
-    fontSize: 16,
-    fontWeight: "600",
-    fontFamily: "SFProRegular",
+    paddingTop: hp(4),
   },
   backToLoginContainer: {
     alignItems: "center",
+    marginTop: hp(3),
   },
   backToLoginText: {
-    fontSize: 16,
-    fontFamily: "SFProRegular",
+    fontSize: Size(4),
+    fontFamily: font.regular,
   },
 });

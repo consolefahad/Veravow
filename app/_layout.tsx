@@ -14,7 +14,6 @@ import { useColorScheme } from "@/hooks/useColorScheme";
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   const [loaded] = useFonts({
-    SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
     HelveticaNow: require("../assets/fonts/helveticanowtext-bold.ttf"),
     SFProBold: require("../assets/fonts/SF-Pro-Display-Bold.otf"),
     SFProSemibold: require("../assets/fonts/SF-Pro-Display-Semibold.otf"),

@@ -1,4 +1,6 @@
 import { Colors } from "@/constants/Colors";
+import { hp, Size, wp } from "@/constants/Dimensions";
+import { font } from "@/constants/Fonts";
 import React from "react";
 import {
   ActivityIndicator,
@@ -8,19 +10,26 @@ import {
 } from "react-native";
 import { ThemedText } from "./ThemedText";
 
+interface CustomButtonProps {
+  onpress: () => void;
+  title: string;
+  loading?: boolean;
+  disabled?: boolean;
+}
+
 export default function CustomButton({
   onpress,
   title,
   loading = false,
   disabled = false,
-}) {
+}: CustomButtonProps) {
   const isDisabled = disabled || loading;
 
   return (
     <TouchableOpacity
       style={[styles.signInButton, isDisabled && styles.disabledButton]}
       activeOpacity={isDisabled ? 1 : 0.8}
-      onPress={isDisabled ? null : onpress}
+      onPress={isDisabled ? undefined : onpress}
       disabled={isDisabled}
     >
       {loading ? (
@@ -56,18 +65,18 @@ export default function CustomButton({
 const styles = StyleSheet.create({
   signInButton: {
     backgroundColor: Colors.primary,
-    paddingVertical: 16,
-    paddingHorizontal: 32,
-    borderRadius: 12,
+    paddingVertical: hp(2),
+    paddingHorizontal: wp(8),
+    borderRadius: wp(3),
     alignItems: "center",
-    marginBottom: 20,
+    marginBottom: hp(2.5),
     shadowColor: "#6366f1",
     shadowOffset: {
       width: 0,
-      height: 4,
+      height: hp(0.5),
     },
     shadowOpacity: 0.3,
-    shadowRadius: 8,
+    shadowRadius: wp(2),
     elevation: 8,
   },
   disabledButton: {
@@ -76,8 +85,8 @@ const styles = StyleSheet.create({
     elevation: 0,
   },
   signInButtonText: {
-    fontSize: 16,
-    fontFamily: "SFProBold",
+    fontSize: Size(4),
+    fontFamily: font.bold,
     color: "#fff",
   },
   disabledButtonText: {
@@ -89,6 +98,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   loadingIndicator: {
-    marginRight: 8,
+    marginRight: wp(2),
   },
 });

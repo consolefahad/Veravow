@@ -3,24 +3,31 @@ import SocialSignin from "@/components/SocialSignin";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { Colors } from "@/constants/Colors";
+import { hp, Size, wp } from "@/constants/Dimensions";
+import { font } from "@/constants/Fonts";
+import { image } from "@/constants/Images";
 import { AngleDown, EmailIcon, LockIcon } from "@/constants/SvgIcons";
+import { useTheme } from "@/constants/Theme";
 import { useToast } from "@/constants/ToastProvider";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
-  Dimensions,
+  BackHandler,
   ImageBackground,
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
   StatusBar,
   StyleSheet,
   TextInput,
   TouchableOpacity,
+  TouchableWithoutFeedback,
   View,
 } from "react-native";
 import { Dropdown } from "react-native-element-dropdown";
-const { width, height } = Dimensions.get("window");
 
-// US States data for dropdown
 const statesData = [
   { label: "Alabama", value: "AL" },
   { label: "Alaska", value: "AK" },
@@ -80,144 +87,185 @@ export default function SignUpScreen() {
   const [password, setPassword] = useState("");
   const [selectedState, setSelectedState] = useState(null);
   const [isFocus, setIsFocus] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const { gradients } = useTheme();
+  useEffect(() => {
+    const backAction = () => {
+      router.push("/");
+      return true;
+    };
+    const backHandler = BackHandler.addEventListener(
+      "hardwareBackPress",
+      backAction
+    );
+    return () => backHandler.remove();
+  }, []);
 
-  const handleCreateAccount = () => {};
-  //   showToast({
-  //     type: "warning",
-  //     text1: "Sign in successful",
-  //     text2: "Welcome back!",
-  //   });
+  const isButtonDisabled = useMemo(() => {
+    return !email.trim() || !password.trim() || !selectedState;
+  }, [email, password, selectedState]);
+
+  const handleCreateAccount = async () => {
+    if (isButtonDisabled) return;
+
+    setLoading(true);
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
+      showToast({
+        type: "success",
+        text1: "Account created successfully",
+        text2: "Welcome to Veravow!",
+      });
+
+      router.push("/auth/signin");
+    } catch (error) {
+      console.error("Account creation failed:", error);
+      showToast({
+        type: "error",
+        text1: "Account creation failed",
+        text2: "Please try again later",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <ThemedView style={styles.container}>
       <StatusBar barStyle="light-content" />
 
-      {/* Background Images */}
       <ImageBackground
-        source={require("@/assets/images/entrybg.png")}
+        source={image.background}
         style={styles.backgroundImage}
         resizeMode="cover"
       >
-        {/* Gradient Overlay */}
         <LinearGradient
-          colors={["rgba(0,0,0,0.4)", "rgba(0,0,0,0.6)", "rgba(0,0,0,0.9)"]}
+          colors={gradients.overlay}
           style={styles.gradientOverlay}
         />
       </ImageBackground>
 
-      {/* Purple Gradient at Bottom Right Corner */}
       <LinearGradient
-        colors={[
-          "transparent",
-          "rgba(121, 142, 255, 0.19)",
-          "rgba(179, 144, 255, 0.4)",
-          "rgba(179, 144, 255, 0.5)",
-        ]}
+        colors={gradients.bottom}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         locations={[0, 0.7, 0.9, 1]}
         style={styles.bottomGradient}
       />
 
-      {/* Content Container */}
-      <View style={styles.contentContainer}>
-        {/* Main Content */}
-        <View style={styles.formContainer}>
-          <ThemedText style={styles.title}>Sign up to Veravow</ThemedText>
+      <KeyboardAvoidingView
+        style={styles.keyboardContainer}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
+      >
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <ScrollView
+            contentContainerStyle={styles.scrollContainer}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
+            <View style={styles.contentContainer}>
+              <View style={styles.formContainer}>
+                <ThemedText style={styles.title}>Sign up to Veravow</ThemedText>
 
-          {/* Social Login Buttons */}
-          <SocialSignin />
+                <SocialSignin />
 
-          {/* Divider */}
-          <ThemedText style={styles.dividerText}>OR</ThemedText>
+                <ThemedText style={styles.dividerText}>OR</ThemedText>
 
-          {/* Form Fields */}
-          <View style={styles.formFields}>
-            <View style={styles.inputContainer}>
-              {/* State Dropdown */}
-              <View style={styles.dropdownContainer}>
-                <Dropdown
-                  style={[
-                    styles.dropdown,
-                    isFocus && { borderColor: "rgba(255, 255, 255, 0.4)" },
-                  ]}
-                  placeholderStyle={styles.placeholderStyle}
-                  selectedTextStyle={styles.selectedTextStyle}
-                  inputSearchStyle={styles.inputSearchStyle}
-                  iconStyle={styles.iconStyle}
-                  data={statesData}
-                  search
-                  maxHeight={300}
-                  labelField="label"
-                  valueField="value"
-                  placeholder={!isFocus ? "Select your state" : "..."}
-                  searchPlaceholder="Search state..."
-                  value={selectedState}
-                  onFocus={() => setIsFocus(true)}
-                  onBlur={() => setIsFocus(false)}
-                  onChange={(item) => {
-                    setSelectedState(item.value);
-                    setIsFocus(false);
-                  }}
-                  renderRightIcon={() => (
-                    <View style={styles.dropdownIcon}>
-                      <AngleDown />
+                <View style={styles.formFields}>
+                  <View style={styles.inputContainer}>
+                    <View style={styles.dropdownContainer}>
+                      <Dropdown
+                        style={[
+                          styles.dropdown,
+                          isFocus && {
+                            borderColor: "rgba(255, 255, 255, 0.4)",
+                          },
+                        ]}
+                        placeholderStyle={styles.placeholderStyle}
+                        selectedTextStyle={styles.selectedTextStyle}
+                        inputSearchStyle={styles.inputSearchStyle}
+                        iconStyle={styles.iconStyle}
+                        data={statesData}
+                        search
+                        maxHeight={hp(37.5)}
+                        labelField="label"
+                        valueField="value"
+                        placeholder={!isFocus ? "Select your state" : "..."}
+                        searchPlaceholder="Search state..."
+                        value={selectedState}
+                        onFocus={() => setIsFocus(true)}
+                        onBlur={() => setIsFocus(false)}
+                        onChange={(item) => {
+                          setSelectedState(item.value);
+                          setIsFocus(false);
+                        }}
+                        renderRightIcon={() => (
+                          <View style={styles.dropdownIcon}>
+                            <AngleDown />
+                          </View>
+                        )}
+                        disable={loading}
+                      />
                     </View>
-                  )}
-                />
+
+                    <View style={styles.emailInput}>
+                      <EmailIcon />
+                      <TextInput
+                        style={styles.textInput}
+                        placeholder="Your email"
+                        placeholderTextColor="#999"
+                        value={email}
+                        onChangeText={setEmail}
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                        editable={!loading}
+                      />
+                    </View>
+
+                    <View style={styles.passwordInput}>
+                      <LockIcon />
+                      <TextInput
+                        style={styles.textInput}
+                        placeholder="Enter password"
+                        placeholderTextColor="#999"
+                        value={password}
+                        onChangeText={setPassword}
+                        secureTextEntry={true}
+                        editable={!loading}
+                      />
+                    </View>
+                  </View>
+                </View>
               </View>
 
-              {/* Email Input */}
-              <View style={styles.emailInput}>
-                <EmailIcon />
-                <TextInput
-                  style={styles.textInput}
-                  placeholder="Your email"
-                  placeholderTextColor="#999"
-                  value={email}
-                  onChangeText={setEmail}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
+              <View style={styles.bottomActions}>
+                <CustomButton
+                  title={"Create Account"}
+                  onpress={handleCreateAccount}
+                  loading={loading}
+                  disabled={isButtonDisabled}
                 />
-              </View>
 
-              {/* Password Input */}
-              <View style={styles.passwordInput}>
-                <LockIcon />
-                <TextInput
-                  style={styles.textInput}
-                  placeholder="Enter password"
-                  placeholderTextColor="#999"
-                  value={password}
-                  onChangeText={setPassword}
-                  secureTextEntry={true}
-                />
+                <View style={styles.signInContainer}>
+                  <ThemedText style={styles.signInText}>
+                    Already have an account?{" "}
+                  </ThemedText>
+                  <TouchableOpacity
+                    activeOpacity={0.7}
+                    onPress={() => {
+                      router.push("/auth/signin");
+                    }}
+                  >
+                    <ThemedText style={styles.signInLink}>Sign in</ThemedText>
+                  </TouchableOpacity>
+                </View>
               </View>
             </View>
-          </View>
-        </View>
-
-        {/* Bottom Actions */}
-        <View style={styles.bottomActions}>
-          <CustomButton
-            title={"Create Account"}
-            onpress={handleCreateAccount}
-          />
-
-          <View style={styles.signInContainer}>
-            <ThemedText style={styles.signInText}>
-              Already have an account?{" "}
-            </ThemedText>
-            <TouchableOpacity
-              activeOpacity={0.7}
-              onPress={() => {
-                router.push("/auth/signin");
-              }}
-            >
-              <ThemedText style={styles.signInLink}>Sign in</ThemedText>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
+          </ScrollView>
+        </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
     </ThemedView>
   );
 }
@@ -225,15 +273,15 @@ export default function SignUpScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.black,
+    // backgroundColor: Colors.black,
   },
   backgroundImage: {
     position: "absolute",
     top: 0,
     left: 0,
     right: 0,
-    height: height * 0.6,
-    width: width,
+    height: hp(60),
+    width: wp(100),
   },
   gradientOverlay: {
     flex: 1,
@@ -244,15 +292,22 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: 0,
     right: 0,
-    height: height * 0.7,
-    width: width,
+    height: hp(70),
+    width: wp(100),
+  },
+  keyboardContainer: {
+    flex: 1,
+  },
+  scrollContainer: {
+    flexGrow: 1,
   },
   contentContainer: {
     flex: 1,
-    paddingHorizontal: 24,
-    paddingTop: 60,
-    paddingBottom: 50,
+    paddingHorizontal: wp(6),
+    paddingTop: hp(7.5),
+    paddingBottom: hp(6),
     justifyContent: "space-between",
+    minHeight: hp(88),
   },
   formContainer: {
     flex: 1,
@@ -260,65 +315,65 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   title: {
-    fontSize: 32,
+    fontSize: Size(8),
     textAlign: "center",
-    marginBottom: 40,
-    fontFamily: "HelveticaNow",
-    lineHeight: 38,
+    marginBottom: hp(5),
+    fontFamily: font.heading,
+    lineHeight: Size(9.5),
   },
   dividerText: {
-    fontSize: 16,
+    fontSize: Size(4),
     textAlign: "center",
-    marginBottom: 24,
-    fontFamily: "SFProRegular",
+    marginBottom: hp(3),
+    fontFamily: font.regular,
     color: Colors.gray300,
   },
   formFields: {
     width: "100%",
-    gap: 16,
+    gap: hp(2),
   },
   dropdownContainer: {
-    marginBottom: 8,
+    marginBottom: hp(1),
   },
   dropdown: {
-    height: 56,
+    height: hp(7),
     borderColor: "rgba(255, 255, 255, 0.18)",
     borderBottomWidth: 1,
-    paddingHorizontal: 16,
+    paddingHorizontal: wp(4),
     backgroundColor: "rgba(0, 0, 0, 0.47)",
     overflow: "hidden",
   },
   placeholderStyle: {
-    fontSize: 16,
+    fontSize: Size(4),
     color: "#999",
-    fontFamily: "SFProRegular",
+    fontFamily: font.regular,
   },
   selectedTextStyle: {
-    fontSize: 16,
+    fontSize: Size(4),
     color: "#fff",
-    fontFamily: "SFProRegular",
+    fontFamily: font.regular,
   },
   iconStyle: {
-    width: 20,
-    height: 20,
+    width: wp(5),
+    height: hp(2.5),
   },
   inputSearchStyle: {
-    height: 40,
-    fontSize: 16,
+    height: hp(5),
+    fontSize: Size(4),
     color: "#fff",
     backgroundColor: "rgba(0, 0, 0, 0.8)",
-    borderRadius: 8,
+    borderRadius: wp(2),
   },
   dropdownIcon: {
-    marginRight: 8,
+    marginRight: wp(2),
   },
   dropdownIconText: {
     color: "#999",
-    fontSize: 12,
+    fontSize: Size(3),
   },
   inputContainer: {
     borderWidth: 1,
-    borderRadius: 22,
+    borderRadius: wp(5.5),
     overflow: "hidden",
     backgroundColor: "rgba(0, 0, 0, 0.47)",
     borderColor: "rgba(255, 255, 255, 0.18)",
@@ -326,27 +381,28 @@ const styles = StyleSheet.create({
   emailInput: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 16,
+    paddingHorizontal: wp(4),
+    paddingVertical: hp(2),
     borderBottomWidth: 1,
     borderBottomColor: "rgba(255, 255, 255, 0.18)",
-    gap: 12,
+    gap: wp(3),
   },
   passwordInput: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    gap: 12,
+    paddingHorizontal: wp(4),
+    paddingVertical: hp(2),
+    gap: wp(3),
   },
   textInput: {
     flex: 1,
-    fontSize: 16,
+    fontSize: Size(4),
     color: "#fff",
-    fontFamily: "SFProRegular",
+    fontFamily: font.regular,
   },
   bottomActions: {
     width: "100%",
+    paddingTop: hp(4),
   },
   signInContainer: {
     flexDirection: "row",
@@ -354,11 +410,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   signInText: {
-    fontSize: 16,
-    fontFamily: "SFProMedium",
+    fontSize: Size(4),
+    fontFamily: font.medium,
   },
   signInLink: {
-    fontSize: 16,
-    fontFamily: "SFProMedium",
+    fontSize: Size(4),
+    fontFamily: font.medium,
   },
 });
