@@ -2,6 +2,7 @@ import CustomButton from "@/components/CustomButton";
 import SocialSignin from "@/components/SocialSignin";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
+import { Colors } from "@/constants/Colors";
 import { hp, Size, wp } from "@/constants/Dimensions";
 import { font } from "@/constants/Fonts";
 import { image } from "@/constants/Images";
@@ -28,7 +29,7 @@ import {
 export default function SignInScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
+  const [showPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const { gradients } = useTheme();
   useEffect(() => {
@@ -266,6 +267,7 @@ const styles = StyleSheet.create({
   textInput: {
     flex: 1,
     fontSize: Size(4),
+    color: Colors.white,
     fontFamily: font.regular,
   },
   forgotPasswordContainer: {
@@ -274,6 +276,7 @@ const styles = StyleSheet.create({
   },
   forgotPasswordText: {
     fontSize: Size(4),
+    color: Colors.white,
     fontFamily: font.regular,
   },
   bottomActions: {

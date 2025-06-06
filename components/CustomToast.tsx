@@ -1,5 +1,5 @@
 import { Colors } from "@/constants/Colors";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   Animated,
   Dimensions,
@@ -30,6 +30,16 @@ const CustomToast: React.FC<ToastProps> = ({
 }) => {
   const [slideAnim] = useState(new Animated.Value(-100));
 
+  const hideToast = useCallback(() => {
+    Animated.timing(slideAnim, {
+      toValue: -100,
+      duration: 300,
+      useNativeDriver: true,
+    }).start(() => {
+      onHide();
+    });
+  }, [slideAnim, onHide]);
+
   useEffect(() => {
     if (visible) {
       // Slide down
@@ -46,17 +56,7 @@ const CustomToast: React.FC<ToastProps> = ({
 
       return () => clearTimeout(timer);
     }
-  }, [visible]);
-
-  const hideToast = () => {
-    Animated.timing(slideAnim, {
-      toValue: -100,
-      duration: 300,
-      useNativeDriver: true,
-    }).start(() => {
-      onHide();
-    });
-  };
+  }, [visible, duration, hideToast, slideAnim]);
 
   const getBackgroundColor = () => {
     switch (type) {

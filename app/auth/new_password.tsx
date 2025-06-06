@@ -1,6 +1,7 @@
 import CustomButton from "@/components/CustomButton";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
+import { Colors } from "@/constants/Colors";
 import { hp, Size, wp } from "@/constants/Dimensions";
 import { font } from "@/constants/Fonts";
 import { image } from "@/constants/Images";
@@ -273,6 +274,7 @@ const styles = StyleSheet.create({
   textInput: {
     flex: 1,
     fontSize: Size(4),
+    color: Colors.white,
     fontFamily: font.regular,
   },
   bottomActions: {

@@ -1,27 +1,12 @@
 import {
-  moderateScale,
-  moderateVerticalScale,
-  scale,
-  verticalScale,
-} from "react-native-size-matters";
+  heightPercentageToDP as hpBase,
+  widthPercentageToDP as wpBase,
+} from "react-native-responsive-screen";
 
-const scaleWidth = (size: number): number => scale(size);
+const scaleWidth = (percent: number): number => wpBase(`${percent}%`);
 
-const scaleHeight = (size: number): number => verticalScale(size);
+const scaleHeight = (percent: number): number => hpBase(`${percent}%`);
 
-const scaleFont = (size: number, factor?: number): number =>
-  moderateScale(size, factor || 0.2);
+const scaleFont = (size: number): number => wpBase(size);
 
-const scaleHeightModerate = (size: number, factor?: number): number =>
-  moderateVerticalScale(size, factor || 0.2);
-
-export {
-  scaleHeight as hp,
-  scaleHeightModerate as hpModerate,
-  moderateScale,
-  moderateVerticalScale,
-  scale,
-  scaleFont as Size,
-  verticalScale,
-  scaleWidth as wp,
-};
+export { scaleHeight as hp, scaleFont as Size, scaleWidth as wp };
